@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AES Encryption</title>
+    <script src="js/script.js"></script>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
+        integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
+        integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
+        crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"
+        integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM"
+        crossorigin="anonymous"></script>
+    <style>
+        textarea:focus,
+        textarea.form-control:focus,
+        input.form-control:focus,
+        input[type=text]:focus,
+        input[type=password]:focus,
+        input[type=email]:focus,
+        input[type=number]:focus,
+        [type=text].form-control:focus,
+        [type=password].form-control:focus,
+        [type=email].form-control:focus,
+        [type=tel].form-control:focus,
+        [contenteditable].form-control:focus, select:focus {
+            box-shadow: none!important;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="row">
+            <div class="col-md-12">
+                <h1 class="display-3 my-3 text-center">AES Encryption</h1>
+                <hr>
+            </div>
+
+            <div class="col-md-6 mb-3 mx-auto">
+                <h3 class="text-muted display-6 mb-3">Generate key</h3>
+                <div class="mb-3 d-flex align-items-center justify-content-center">
+                    <select class="custom-select w-100 rounded-0" name="key_length"
+                        style="border-bottom-left-radius: .3rem!important; border-top-left-radius: .3rem!important;">
+                        <option value="128">128 bit</option>
+                        <option value="192">192 bit</option>
+                        <option value="256">256 bit</option>
+                    </select>
+                    <button class="btn border rounded-0 btn-light" type="button" onclick="generateKey()"
+                        style="border-bottom-right-radius: .3rem!important; border-top-right-radius: .3rem!important;">Generate</button>
+                </div>
+                <div class="input-group mb-3">
+                    <input type="text" name="generated_key" class="form-control" placeholder="Key">
+                </div>
+                <h3 class="text-muted display-6 mb-3">Choose file to encrypt</h3>
+                <div class="mb-3">
+                    <input type="file" name="original_file">
+                </div>
+                <div id="encrypt-message" class="mb-3"></div>
+                <button class="btn btn-secondary" onclick="encryptEvent()">Encrypt</button>
+            </div>
+        </div>
+    </div>
+    <script src="js/save-bytes.js"></script>
+    <script>
+        function generateKey() {
+            var length = parseInt(document.querySelector("select[name='key_length']").value) / 8;
+            var key = "";
+            for (var i = 0; i < length; i++) {
+                key += Math.floor(Math.random() * 255) + (i == length - 1 ? '' : ', ');
+            }
+            document.querySelector("input[name='generated_key']").value = key;
+        }
+
+        function encryptEvent() {
+            try {
+                var reader = new FileReader();
+
+                // get key
+                var key = document.querySelector("input[name='generated_key']").value.split(', ');
+                for (var i = 0; i < key.length; i++) key[i] = parseInt(key[i]);
+
+                var file = document.querySelector("input[name='original_file']").files[0];
+                var fileName = file.name.split(/(\\|\/)/g).pop();
+                reader.onload = function () {
+                    try {
+                        // get bytes from file
+                        var arrayBuffer = this.result, bytes = new Uint8Array(arrayBuffer);
+                        var startTime = performance.now()
+                        var outBytes = crypt(new AES(key), bytes);
+                        var endTime = performance.now()
+                        saveByteArray([outBytes], 'encrypted_file_' + fileName);
+                        document.getElementById('encrypt-message').innerHTML = `<div class="alert alert-success" role="alert">Encrypted! Running time: ${endTime - startTime} miliseconds</div>`
+                    } catch (e) {
+                        document.getElementById('encrypt-message').innerHTML = `<div class="alert alert-danger" role="alert">${e.message}</div>`
+                    }
+                }
+                reader.readAsArrayBuffer(file);
+            } catch (e) {
+                document.getElementById('encrypt-message').innerHTML = `<div class="alert alert-danger" role="alert">${e.message}</div>`
+            }
+        }
+    </script>
+</body>
+
+</html>

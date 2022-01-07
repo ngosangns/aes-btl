@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AES Decryption</title>
+    <script src="js/script.js"></script>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
+        integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
+        integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
+        crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"
+        integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM"
+        crossorigin="anonymous"></script>
+    <style>
+        textarea:focus,
+        textarea.form-control:focus,
+        input.form-control:focus,
+        input[type=text]:focus,
+        input[type=password]:focus,
+        input[type=email]:focus,
+        input[type=number]:focus,
+        [type=text].form-control:focus,
+        [type=password].form-control:focus,
+        [type=email].form-control:focus,
+        [type=tel].form-control:focus,
+        [contenteditable].form-control:focus,
+        select:focus {
+            box-shadow: none !important;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="row">
+            <div class="col-md-12">
+                <h1 class="display-3 my-3 text-center">AES Decryption</h1>
+                <hr>
+            </div>
+
+            <div class="col-md-6 mb-3 mx-auto">
+                <h3 class="text-muted display-6 mb-3">Key</h3>
+                <div class="input-group mb-3">
+                    <input type="text" name="key" class="form-control" placeholder="Paste key here">
+                </div>
+                <h3 class="text-muted display-6 mb-3">Choose file to decrypt</h3>
+                <div class="mb-3">
+                    <input type="file" name="encrypted_file">
+                </div>
+                <div id="decrypt-message" class="mb-3"></div>
+                <button class="btn btn-secondary" onclick="decryptEvent()">Decrypt</button>
+            </div>
+        </div>
+    </div>
+    <script src="js/save-bytes.js"></script>
+    <script>
+        function decryptEvent() {
+            try {
+                var reader = new FileReader();
+
+                // get key
+                var key = document.querySelector("input[name='key']").value.split(', ');
+                for (var i = 0; i < key.length; i++) key[i] = parseInt(key[i]);
+
+                var file = document.querySelector("input[name='encrypted_file']").files[0];
+                var fileName = file.name.split(/(\\|\/)/g).pop().replace(new RegExp("^encrypted_file_", "gm"), '');
+                reader.onload = function () {
+                    try {
+                        // get bytes from file
+                        var arrayBuffer = this.result, bytes = new Uint8Array(arrayBuffer);
+                        var startTime = performance.now()
+                        var outBytes = crypt(new AES(key), bytes);
+                        var endTime = performance.now()
+                        saveByteArray([outBytes], 'decrypted_file_' + fileName);
+                        document.getElementById('decrypt-message').innerHTML = `<div class="alert alert-success" role="alert">Decrypted! Running time: ${endTime - startTime} miliseconds</div>`
+                    } catch (e) {
+                        document.getElementById('decrypt-message').innerHTML = `<div class="alert alert-danger" role="alert">${e.message}</div>`
+                    }
+                }
+                reader.readAsArrayBuffer(file);
+            } catch (e) {
+                document.getElementById('decrypt-message').innerHTML = `<div class="alert alert-danger" role="alert">${e.message}</div>`
+            }
+        }
+    </script>
+</body>
+
+</html>
